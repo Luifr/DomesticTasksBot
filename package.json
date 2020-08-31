@@ -1,0 +1,54 @@
+{
+  "name": "domestictasksbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Luifr/DomesticTasksBot"
+  },
+  "scripts": {
+    "start": "tsc && node -r dotenv/config dist/index.js",
+    "dev": "ts-node-dev -r dotenv/config src/index.ts",
+    "jupiter": "tsc && node -r dotenv/config dist/scripts/scrape.js",
+    "lint": "eslint src/**",
+    "lint-fix": "eslint src/** --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Lui",
+  "license": "MIT",
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsc && npm run lint"
+    }
+  },
+  "engines": {
+    "node": "10.15.3"
+  },
+  "dependencies": {
+    "@types/cheerio": "^0.22.21",
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^14.6.0",
+    "@types/node-telegram-bot-api": "^0.50.2",
+    "@types/pdf-parse": "^1.1.0",
+    "axios": "^0.18.1",
+    "cheerio": "^1.0.0-rc.3",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "firebase-admin": "^7.4.0",
+    "node-telegram-bot-api": "^0.50.0",
+    "pdf-parse": "^1.1.1",
+    "remove-accents": "^0.4.2",
+    "string-similarity": "^4.0.2",
+    "ts-node-dev": "^1.0.0-pre.58",
+    "typescript": "^4.0.2",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.9.1",
+    "@typescript-eslint/parser": "^3.9.1",
+    "eslint": "^7.2.0",
+    "eslint-config-google": "^0.14.0",
+    "husky": "^4.2.5"
+  }
+}
