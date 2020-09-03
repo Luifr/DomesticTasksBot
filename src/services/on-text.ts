@@ -3,7 +3,7 @@ import {
   commands,
   Command,
 } from '../models/command';
-import { runCommand } from './command-execute';
+import { runCommand } from './command/command-execute';
 import { DomesticTasksBot } from './telegram-bot';
 
 const botName = 'domestictasksbot';

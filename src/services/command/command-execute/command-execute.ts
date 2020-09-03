@@ -4,8 +4,8 @@ import {
   helpCommand,
   sairCommand,
   voltarCommand
-} from './commands';
-import { ICommandExecuter } from '../../models/command';
+} from '../commands-resolver';
+import { ICommandExecuter } from '../../../models/command';
 
 export const commandExecuter: ICommandExecuter = {
   help: helpCommand,

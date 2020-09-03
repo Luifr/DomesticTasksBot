@@ -2,7 +2,7 @@ process.env.NTBA_FIX_319 = 1 as any;
 
 import TelegramBot from 'node-telegram-bot-api';
 import { onText } from './on-text';
-import { stateMachine } from './command-state-machine';
+import { stateMachine } from './command/command-state-machine';
 import { GroupController } from '../controllers/group';
 import { getGroudDbController } from './group-db';
 import { onCallbackQuery } from './on-callback-query';
@@ -74,10 +74,11 @@ export class DomesticTasksBot {
   }
 
   sendMessage = (text: string, options?: TelegramBot.SendMessageOptions) => {
+    options = options ?? { reply_markup: { remove_keyboard: true } };
     telegramBot.sendMessage(
       this.chatId,
       text,
-      options ?? { reply_markup: { remove_keyboard: true }, parse_mode: 'Markdown' }
+      { ...{ parse_mode: 'Markdown' }, ...options }
     );
   }
 

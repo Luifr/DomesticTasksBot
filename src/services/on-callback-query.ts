@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { runCommand } from './command-execute';
+import { runCommand } from './command/command-execute';
 import { DomesticTasksBot } from './telegram-bot';
 
 export const onCallbackQuery = async (

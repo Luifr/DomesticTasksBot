@@ -1,6 +1,6 @@
-import { normaliseString } from '../../helpers/string';
-import { Command, StateResolverFunction } from '../../models/command';
-import { DomesticTasksBot } from '../telegram-bot';
+import { normaliseString } from '../../../helpers/string';
+import { Command, StateResolverFunction } from '../../../models/command';
+import { DomesticTasksBot } from '../../telegram-bot';
 import { commandExecuter } from './command-execute';
 
 export const runCommand = async (
