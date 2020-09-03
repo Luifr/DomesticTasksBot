@@ -102,19 +102,18 @@ export const criarCommand: CommandStateResolver<'criar'> = {
     }
 
     if (context.doers.length === 0) {
-      bot.sendMessage('É preciso ter pelo menos uma pessoa para fazer a tarefa');
+      const responseText = 'É preciso ter pelo menos uma pessoa para fazer a tarefa';
+      bot.sendMessage(responseText, undefined, 3300);
       return 'DOER';
     }
 
-    // TODO: criar evento
-    console.log(context);
     await bot.db.info.task.create({
       name: context.title,
       description: context.desc,
       doers: context.doers,
       frequency: context.freq
     });
-    bot.sendMessage('Evento criado');
+    bot.sendMessage(`Tarefa \`${context.title}\` criado(a)`);
     return 'END';
   }
 };

@@ -12,10 +12,10 @@ const isProd = process.env.NODE_ENV === 'production';
 const PORT = +process.env.PORT! || 3000;
 
 const botToken = process.env.BOT_TOKEN!;
-const herokuUrl = process.env.HEROKU_URL!;
 
 let telegramBot: TelegramBot;
 if (isProd) {
+  const herokuUrl = process.env.HEROKU_URL!;
   telegramBot = new TelegramBot(botToken, { webHook: { port: PORT } });
   telegramBot.setWebHook(`${herokuUrl}/bot${botToken}`);
 }
@@ -73,13 +73,23 @@ export class DomesticTasksBot {
 
   }
 
-  sendMessage = (text: string, options?: TelegramBot.SendMessageOptions) => {
+  sendMessage = async (
+    text: string,
+    options?: TelegramBot.SendMessageOptions,
+    selfDestruct?: number
+  ) => {
     options = options ?? { reply_markup: { remove_keyboard: true } };
-    telegramBot.sendMessage(
+    const msg = await telegramBot.sendMessage(
       this.chatId,
       text,
       { ...{ parse_mode: 'Markdown' }, ...options }
     );
+    if (selfDestruct) {
+      setTimeout(() => {
+        this.deleteMessage(msg.message_id);
+      }, selfDestruct);
+    }
+    return msg;
   }
 
   editMessage = (text: string, options?: TelegramBot.EditMessageTextOptions) => {
@@ -90,6 +100,10 @@ export class DomesticTasksBot {
         ...options
       }
     );
+  }
+
+  deleteMessage = (messageId: string | number) => {
+    telegramBot.deleteMessage(this.chatId, String(messageId));
   }
 
   getCurrentState = <T = any>() => {
