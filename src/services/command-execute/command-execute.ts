@@ -5,12 +5,7 @@ import {
   sairCommand,
   voltarCommand
 } from './commands';
-import { Command, CommandStateResolver } from '../../models/command';
-
-
-type ICommandExecuter = {
-  [command in Command]: CommandStateResolver<command>
-}
+import { ICommandExecuter } from '../../models/command';
 
 export const commandExecuter: ICommandExecuter = {
   help: helpCommand,

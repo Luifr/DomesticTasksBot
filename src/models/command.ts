@@ -34,3 +34,7 @@ type CommandStateResolverMapper<T extends Command> = {
 export type CommandStateResolver<T extends Command> = StatesOf<T> extends never ?
   CommandStateResolverMapper<T> | StateResolverFunction<T> :
   CommandStateResolverMapper<T>
+
+export type ICommandExecuter = {
+  [command in Command]: CommandStateResolver<command>
+}

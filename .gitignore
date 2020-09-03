@@ -94,6 +94,4 @@ config/*.json
 # temp local files
 __*
 
-jupiter
-
 launch.json

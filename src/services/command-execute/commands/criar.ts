@@ -1,4 +1,4 @@
-import { CommandStateResolver, StatesOf } from '../../../models/command';
+import { CommandStateResolver, StateResolverFunction } from '../../../models/command';
 import { DomesticTasksBot } from '../../telegram-bot';
 
 interface ICriarContext {
@@ -8,8 +8,16 @@ interface ICriarContext {
   doers: number[];
 }
 
-const setTitle = (bot: DomesticTasksBot, arg: string): StatesOf<'criar'> => {
+const setTitle: StateResolverFunction<'criar'> = async (
+  bot: DomesticTasksBot,
+  arg: string
+) => {
   const { context } = bot.getCurrentState<ICriarContext>();
+  const task = await bot.db.info.task.getByName(arg);
+  if (task) {
+    bot.sendMessage('Ja existe uma tarefa com esse nome, tente outro');
+    return 'TITLE';
+  }
   context.title = arg;
   bot.sendMessage(`De uma descricao para a tarefa \`${arg}\`!`);
   return 'DESC';
