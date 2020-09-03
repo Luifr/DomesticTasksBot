@@ -1,32 +1,30 @@
 import { normaliseString } from '../../helpers/string';
-import { Command, CommandStateResolver } from '../../models/command';
+import { Command, StateResolverFunction } from '../../models/command';
 import { DomesticTasksBot } from '../telegram-bot';
-import { helpCommand } from './help';
-import { criarCommand } from './criar';
-
-export type ICommandExecuter = {
-  [command in Command]: CommandStateResolver<command>
-}
+import { commandExecuter } from './command-execute';
 
 export const runCommand = async (
   bot: DomesticTasksBot,
   command: Command,
   arg?: string
 ) => {
-  const commandExecuter: ICommandExecuter = {
-    help: {
-      INITIAL: helpCommand
-    },
-    criar: criarCommand
-  };
-
   const state = bot.getCurrentState();
-  // @ts-ignore
-  const nextState = await commandExecuter[command][state.currentState](
-    bot, normaliseString(arg)
-  );
+  let stateResolver: StateResolverFunction<Command>;
+
+  if (state.currentState === 'INITIAL' && typeof commandExecuter[command] === 'function') {
+    // @ts-ignore
+    stateResolver = await commandExecuter[command];
+  }
+  else {
+    // @ts-ignore
+    stateResolver = await commandExecuter[command][state.currentState];
+  }
+
+  const nextState = await stateResolver(bot, normaliseString(arg));
+
   if (nextState === 'END') {
-    state;
+    state.currentState = 'INITIAL';
+    state.currentCommand = '';
   }
   else {
     state.currentState = nextState;

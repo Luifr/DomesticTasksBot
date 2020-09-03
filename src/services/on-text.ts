@@ -2,18 +2,18 @@ import TelegramBot from 'node-telegram-bot-api';
 import {
   commands,
   Command,
-} from '../../models/command';
-import { runCommand } from '../command-execute';
-import { DomesticTasksBot } from '../telegram-bot';
+} from '../models/command';
+import { runCommand } from './command-execute';
+import { DomesticTasksBot } from './telegram-bot';
 
 const botName = 'domestictasksbot';
 
-const emptyCommandRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? *$`);
-const commandWithArgRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? +(.*)$`);
+const emptyCommandRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? *$`, 'i');
+const commandWithArgRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? +(.*)$`, 'i');
 
 export const onText = async (bot: DomesticTasksBot, msg: TelegramBot.Message): Promise<void> => {
   const msgText = msg.text;
-  const fromId = msg.from?.id;
+  const fromId = msg.from!.id;
 
   // TODO: logging/report system
   if (msg.reply_to_message) return;
@@ -28,9 +28,17 @@ export const onText = async (bot: DomesticTasksBot, msg: TelegramBot.Message): P
     return;
   }
 
+  // TODO: uncomment this
+  // if (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup') {
+  //   let responseText = 'Oie, eu so funciono em grupos\n';
+  //   responseText += 'Crie um grupo e me adiocona la!';
+  //   bot.sendMessage(responseText);
+  //   return;
+  // }
+
   const emptyCommandExec = emptyCommandRegex.exec(msgText);
   const commandWithArgExec = commandWithArgRegex.exec(msgText);
-  const cleanMsgText = /^\/?([^@]*@?)(?:@${botName})? *$/.exec(msgText)![1];
+  const cleanMsgText = /^\/?([^@]*@?)(?:@${botName})? *$/i.exec(msgText)![1];
 
 
   const state = bot.getCurrentState();

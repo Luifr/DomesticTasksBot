@@ -1,4 +1,4 @@
-import { DomesticTasksBot } from '../telegram-bot';
+import { DomesticTasksBot } from '../../telegram-bot';
 
 export const helpCommand = (bot: DomesticTasksBot, _arg?: string) => {
   const contact = process.env.DEV_CONTACT;

@@ -1,8 +1,11 @@
 process.env.NTBA_FIX_319 = 1 as any;
 
 import TelegramBot from 'node-telegram-bot-api';
-import { onText } from './event-listener/on-text';
+import { onText } from './on-text';
 import { stateMachine } from './command-state-machine';
+import { GroupController } from '../controllers/group';
+import { getGroudDbController } from './group-db';
+import { onCallbackQuery } from './on-callback-query';
 
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -21,24 +24,53 @@ else {
 }
 
 telegramBot.on('text', async (msg) => {
-  const bot = new DomesticTasksBot(msg);
+
+  if (!msg.from) {
+    return;
+  }
+
+  const bot = new DomesticTasksBot(msg, msg.chat, msg.message_id);
   await onText(bot, msg);
+});
+
+telegramBot.on('callback_query', async (msg) => {
+
+  if (!msg.message) {
+    console.error('No message in callback query');
+    return;
+  }
+
+  const bot = new DomesticTasksBot(msg, msg.message.chat, msg.message.message_id);
+  await onCallbackQuery(bot, msg);
 });
 
 console.log('DomesticTasks started running');
 
 export class DomesticTasksBot {
 
-  public userId: number | undefined;
+  public db: GroupController;
   private chatId: number;
   public chatType: TelegramBot.ChatType;
+  private messageId: number | undefined;
 
-  constructor(msg: TelegramBot.Message) {
+  public userId: number;
+  public name: string;
+  public arroba: string | undefined;
 
+  constructor(
+    msg: TelegramBot.Message | TelegramBot.CallbackQuery,
+    chat: TelegramBot.Chat,
+    messageId?: number
+  ) {
 
-    this.userId = msg.from?.id;
-    this.chatId = msg.chat.id;
-    this.chatType = msg.chat.type;
+    this.userId = msg.from!.id;
+    this.name = msg.from!.first_name;
+    this.arroba = msg.from!.username;
+    this.chatId = chat.id;
+    this.chatType = chat.type;
+    this.messageId = messageId;
+    this.db = getGroudDbController(this.chatId);
+
   }
 
   sendMessage = (text: string, options?: TelegramBot.SendMessageOptions) => {
@@ -46,6 +78,16 @@ export class DomesticTasksBot {
       this.chatId,
       text,
       options ?? { reply_markup: { remove_keyboard: true }, parse_mode: 'Markdown' }
+    );
+  }
+
+  editMessage = (text: string, options?: TelegramBot.EditMessageTextOptions) => {
+    telegramBot.editMessageText(
+      text,
+      {
+        ...{ chat_id: this.chatId, message_id: this.messageId },
+        ...options
+      }
     );
   }
 
