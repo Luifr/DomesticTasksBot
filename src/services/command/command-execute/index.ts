@@ -13,15 +13,12 @@ export const runCommand = async (
 
   const noAuthRequiredCommands: Command[] = ['help', 'cadastro'];
 
-  if (state.currentCommand === '') {
-    console.error('Nao devia ser isso não');
-    return;
-  }
-  if (noAuthRequiredCommands.indexOf(state.currentCommand)) {
-    bot.sendMessage('Voce não está autorizado a usar '); // TODO: auth
-    return;
-  }
+  const doer = await bot.db.info.doer.get(bot.userId);
 
+  if (noAuthRequiredCommands.indexOf(command) === -1 && !doer) {
+    bot.sendMessage('Para usar esse comando primera faca o /cadastro'); // TODO: auth
+    return;
+  }
   if (state.currentState === 'INITIAL' && typeof commandExecuter[command] === 'function') {
     // @ts-ignore
     stateResolver = await commandExecuter[command];
