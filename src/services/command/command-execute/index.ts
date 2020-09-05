@@ -11,6 +11,17 @@ export const runCommand = async (
   const state = bot.getCurrentState();
   let stateResolver: StateResolverFunction<Command>;
 
+  const noAuthRequiredCommands: Command[] = ['help', 'cadastro'];
+
+  if (state.currentCommand === '') {
+    console.error('Nao devia ser isso não');
+    return;
+  }
+  if (noAuthRequiredCommands.indexOf(state.currentCommand)) {
+    bot.sendMessage('Voce não está autorizado a usar '); // TODO: auth
+    return;
+  }
+
   if (state.currentState === 'INITIAL' && typeof commandExecuter[command] === 'function') {
     // @ts-ignore
     stateResolver = await commandExecuter[command];
