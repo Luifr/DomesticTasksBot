@@ -10,7 +10,7 @@
   "scripts": {
     "start": "tsc && node -r dotenv/config dist/index.js",
     "dev": "ts-node-dev -r dotenv/config src/index.ts",
-    "jupiter": "tsc && node -r dotenv/config dist/scripts/scrape.js",
+    "build": "tsc",
     "lint": "eslint src/**",
     "lint-fix": "eslint src/** --fix",
     "test": "echo \"Error: no test specified\" && exit 1"

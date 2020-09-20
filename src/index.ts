@@ -1,6 +1,5 @@
-import './services/telegram-bot';
-
-const isProd = process.env.NODE_ENV === 'production';
+import { isProd } from './helpers';
+import './services/init-controllers';
 
 if (
   !process.env.CLIENT_EMAIL ||

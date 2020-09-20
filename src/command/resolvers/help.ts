@@ -1,6 +1,6 @@
-import { DomesticTasksBot } from '../../telegram-bot';
+import { CommandStateResolver } from '../../models/command';
 
-export const helpCommand = (bot: DomesticTasksBot, _arg?: string) => {
+export const helpCommand: CommandStateResolver<'help'> = (client, _arg) => {
   const contact = process.env.DEV_CONTACT;
   const contactText = contact ?
     `Qualquer duvida ou sugestão, so chamar: ${contact}` :
@@ -11,6 +11,6 @@ export const helpCommand = (bot: DomesticTasksBot, _arg?: string) => {
   'Comandos disponiveis:\n\n' +
   `\n${contactText}`;
 
-  bot.sendMessage(helpText, { parse_mode: 'HTML' });
+  client.sendMessage(helpText, { parse_mode: 'HTML' });
   return 'END' as const;
 };

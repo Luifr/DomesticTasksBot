@@ -3,15 +3,18 @@ import {
   commands,
   Command,
 } from '../models/command';
-import { runCommand } from './command/command-execute';
-import { DomesticTasksBot } from './telegram-bot';
+import { runCommand } from '../command/run-command';
+import { DomesticTasksClient } from './client';
 
-const botName = 'domestictasksbot';
+const botName = 'helper_alfred_bot';
 
 const emptyCommandRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? *$`, 'i');
 const commandWithArgRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? +(.*)$`, 'i');
+const cleanMsgTextRegex = new RegExp(`^/?([^@]*@?)(?:@${botName})? *$`, 'i');
 
-export const onText = async (bot: DomesticTasksBot, msg: TelegramBot.Message): Promise<void> => {
+export const onText = async (
+  client: DomesticTasksClient, msg: TelegramBot.Message
+): Promise<void> => {
   const msgText = msg.text;
   const fromId = msg.from!.id;
 
@@ -28,20 +31,19 @@ export const onText = async (bot: DomesticTasksBot, msg: TelegramBot.Message): P
     return;
   }
 
-  // TODO: uncomment this
-  // if (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup') {
-  //   let responseText = 'Oie, eu so funciono em grupos\n';
-  //   responseText += 'Crie um grupo e me adiocona la!';
-  //   bot.sendMessage(responseText);
-  //   return;
-  // }
+  if (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup') {
+    let responseText = 'Oie, eu so funciono em grupos\n';
+    responseText += 'Crie um grupo e me adiocona la!';
+    client.sendMessage(responseText);
+    return;
+  }
 
   const emptyCommandExec = emptyCommandRegex.exec(msgText);
   const commandWithArgExec = commandWithArgRegex.exec(msgText);
-  const cleanMsgText = /^\/?([^@]*@?)(?:@${botName})? *$/i.exec(msgText)![1];
+  const cleanMsgText = cleanMsgTextRegex.exec(msgText)![1];
 
 
-  const state = bot.getCurrentState();
+  const state = client.getCurrentState();
 
   if (cleanMsgText === '.') {
     state.context = {};
@@ -52,20 +54,20 @@ export const onText = async (bot: DomesticTasksBot, msg: TelegramBot.Message): P
 
 
   if (state.currentCommand !== '' && state.currentState !== '') {
-    runCommand(bot, state.currentCommand, cleanMsgText);
+    runCommand(client, state.currentCommand, cleanMsgText);
   }
   else if (emptyCommandExec) {
     const command = emptyCommandExec[1] as Command;
-    runCommand(bot, command);
+    runCommand(client, command);
   }
   else if (commandWithArgExec) {
     const command = commandWithArgExec[1] as Command;
     const arg = commandWithArgExec[2];
-    runCommand(bot, command, arg);
+    runCommand(client, command, arg);
   }
   else {
     // Command not found
-    bot.sendMessage(`Comando \`${cleanMsgText}\` não encontrado`);
+    client.sendMessage(`Comando \`${cleanMsgText}\` não encontrado`, { parse_mode: 'Markdown' });
   }
 
 };

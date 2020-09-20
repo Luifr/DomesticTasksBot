@@ -1,10 +1,14 @@
-import { DomesticTasksBot } from '../services/telegram-bot';
+import { DomesticTasksClient } from '../services/client';
 
 const commandsAndStates = {
   help: [],
   cadastro: [],
   sair: [],
   voltar: [],
+  info: ['NAME'],
+  feito: ['NAME'],
+  editar: ['TASKS_MENU', 'EDIT_MENU'],
+  tarefas: [],
   criar: ['TITLE', 'DESC', 'FREQ', 'DOER']
 } as const;
 
@@ -19,11 +23,13 @@ type StateResolverFunctionReturn<T extends Command> =
   Promise<StatesOf<T> | 'END'> |
   StatesOf<T> | 'END'
 
-type InitialFunctionResolver<T extends Command> =
-  (bot: DomesticTasksBot, arg?: string) => StateResolverFunctionReturn<T>
+type InitialFunctionResolver<T extends Command> = (
+  client: DomesticTasksClient, arg?: string, originalArg?: string
+) => StateResolverFunctionReturn<T>
 
-export type StateResolverFunction<T extends Command> =
-  (bot: DomesticTasksBot, arg: string) => StateResolverFunctionReturn<T>
+export type StateResolverFunction<T extends Command> = (
+  client: DomesticTasksClient, arg: string, originalArg: string
+) => StateResolverFunctionReturn<T>
 
 type CommandStateResolverMapper<T extends Command> = {
   [state in StatesOf<T> | 'INITIAL']: state extends 'INITIAL' ?

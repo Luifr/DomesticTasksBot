@@ -1,19 +1,19 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { runCommand } from './command/command-execute';
-import { DomesticTasksBot } from './telegram-bot';
+import { runCommand } from '../command/run-command';
+import { DomesticTasksClient } from './client';
 
 export const onCallbackQuery = async (
-  bot: DomesticTasksBot,
+  client: DomesticTasksClient,
   msg: TelegramBot.CallbackQuery
 ): Promise<void> => {
   const callBackData = msg.data;
 
-  const state = bot.getCurrentState();
+  const state = client.getCurrentState();
 
   if (state.currentCommand === '') {
     return;
   }
 
-  runCommand(bot, state.currentCommand, callBackData);
+  runCommand(client, state.currentCommand, callBackData);
 
 };

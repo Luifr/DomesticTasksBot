@@ -1,30 +1,35 @@
-import { CommandStateResolver, StateResolverFunction } from '../../../models/command';
-import { DomesticTasksBot } from '../../telegram-bot';
+import { getTodayString } from '../../helpers/date';
+import { CommandStateResolver, StateResolverFunction } from '../../models/command';
+import { DomesticTasksClient } from '../../services/client';
 
 interface ICriarContext {
   title: string;
+  originalTitle: string;
   desc: string;
   freq: number;
   doers: number[];
 }
 
 const setTitle: StateResolverFunction<'criar'> = async (
-  bot: DomesticTasksBot,
-  arg: string
+  client: DomesticTasksClient,
+  arg: string,
+  originalArg: string
 ) => {
-  const { context } = bot.getCurrentState<ICriarContext>();
-  const task = await bot.db.info.task.getByName(arg);
+  const { context } = client.getCurrentState<ICriarContext>();
+  const task = await client.db.info.task.getByName(arg);
   if (task) {
-    bot.sendMessage('Ja existe uma tarefa com esse nome, tente outro');
+    client.sendMessage('Ja existe uma tarefa com esse nome, tente outro');
     return 'TITLE';
   }
   context.title = arg;
-  bot.sendMessage(`De uma descricao para a tarefa \`${arg}\`!`);
+  context.originalTitle = originalArg;
+  const replyText = `De uma descricao para a tarefa \`${originalArg}\`!`;
+  client.sendMessage(replyText, { parse_mode: 'Markdown' });
   return 'DESC';
 };
 
-const getDoersKeyboard = async (bot: DomesticTasksBot, doersIds?: number[]) => {
-  const doers = await bot.db.info.doer.getAll();
+const getDoersKeyboard = async (client: DomesticTasksClient, doersIds?: number[]) => {
+  const doers = await client.db.info.doer.getAll();
   const keyboard = doers.map(doer => {
     const isHomeEmoticon = doer.isHome ? '🏠' : '✈️';
     return [{
@@ -45,41 +50,41 @@ const getDoersKeyboard = async (bot: DomesticTasksBot, doersIds?: number[]) => {
 };
 
 export const criarCommand: CommandStateResolver<'criar'> = {
-  INITIAL: (bot, arg) => {
+  INITIAL: (client, arg, originalArg) => {
     if (!arg) {
-      bot.sendMessage(`Qual o nome da tarefa?`);
+      client.sendMessage(`Qual o nome da tarefa?`);
       return 'TITLE';
     }
-    return setTitle(bot, arg);
+    return setTitle(client, arg, originalArg!);
   },
   TITLE: setTitle,
-  DESC: (bot, arg) => {
-    const { context } = bot.getCurrentState<ICriarContext>();
+  DESC: (client, arg) => {
+    const { context } = client.getCurrentState<ICriarContext>();
     context.desc = arg;
-    bot.sendMessage(`A cada quantos dias?`);
+    client.sendMessage(`A cada quantos dias?`);
     return 'FREQ';
   },
-  FREQ: async (bot, arg) => {
+  FREQ: async (client, arg) => {
     const freq = +arg;
     if (isNaN(freq)) {
-      bot.sendMessage('Preciso de um numero, de quantos em quantos dias a tarefa se repete!');
+      client.sendMessage('Preciso de um numero, de quantos em quantos dias a tarefa se repete!');
       return 'FREQ';
     }
-    const { context } = bot.getCurrentState<ICriarContext>();
+    const { context } = client.getCurrentState<ICriarContext>();
     context.freq = +arg;
     context.doers = [];
     let responseText = 'Selecione os responsaveis\n';
     responseText += 'Quando acabar é só enviar';
 
-    bot.sendMessage(responseText, {
+    client.sendMessage(responseText, {
       reply_markup: {
-        inline_keyboard: await getDoersKeyboard(bot)
+        inline_keyboard: await getDoersKeyboard(client)
       }
     });
     return 'DOER';
   },
-  DOER: async (bot, arg) => {
-    const { context } = bot.getCurrentState<ICriarContext>();
+  DOER: async (client, arg) => {
+    const { context } = client.getCurrentState<ICriarContext>();
     if (arg != 'enviar') {
       if (arg === 'pop') {
         context.doers.pop();
@@ -90,11 +95,11 @@ export const criarCommand: CommandStateResolver<'criar'> = {
       }
       let responseText = 'Selecione os responsaveis\n';
       responseText += 'Quando acabar é só enviar';
-      bot.editMessage(
+      client.editMessage(
         responseText,
         {
           reply_markup: {
-            inline_keyboard: await getDoersKeyboard(bot, context.doers)
+            inline_keyboard: await getDoersKeyboard(client, context.doers)
           }
         }
       );
@@ -103,17 +108,20 @@ export const criarCommand: CommandStateResolver<'criar'> = {
 
     if (context.doers.length === 0) {
       const responseText = 'É preciso ter pelo menos uma pessoa para fazer a tarefa';
-      bot.sendMessage(responseText, undefined, 3300);
+      client.sendMessage(responseText, undefined, { selfDestruct: 3300 });
       return 'DOER';
     }
 
-    await bot.db.info.task.create({
+    await client.db.info.task.create({
       name: context.title,
+      originalName: context.originalTitle,
       description: context.desc,
       doers: context.doers,
-      frequency: context.freq
+      frequency: context.freq,
+      nextDay: getTodayString(),
+      nextDoer: Math.floor(Math.random() * context.doers.length)
     });
-    bot.sendMessage(`Tarefa \`${context.title}\` criado(a)`);
+    client.sendMessage(`Tarefa \`${context.title}\` criado(a)`, { parse_mode: 'Markdown' });
     return 'END';
   }
 };

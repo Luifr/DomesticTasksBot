@@ -1,0 +1,9 @@
+help - descricao dos comandos
+cadastro - se cadastra
+sair - sair de casa (sua vez é pulada nas tarefas)
+voltar - voltar para casa (voce volta a participar das tarefas)
+info - mostra as informações de uma tarefa
+editar - editar uma tarefa
+tarefas - ver as tarefas cadastradras
+criar - criar uma tarefa
+feito - use depois de terminar um tarefa

@@ -30,7 +30,6 @@ export class TaskController {
     }
     if (!newTask.id) {
       newTask.id = uuid.v4();
-      newTask.nextDoer = Math.floor(Math.random() * newTask.doers.length);
     }
     tasks.push(newTask as ITask);
     return this.infoDoc.set(

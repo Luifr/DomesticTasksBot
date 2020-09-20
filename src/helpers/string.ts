@@ -1,5 +1,12 @@
 import accents from 'remove-accents';
 
+export const trimString = (str?: string): string => {
+  if (!str) {
+    return '';
+  }
+  return str.replace(/\s\s+/g, ' ').trim();
+};
+
 export const cleanString = (str?: string): string => {
   if (!str) {
     return '';
@@ -7,7 +14,7 @@ export const cleanString = (str?: string): string => {
   return accents.remove(str).toLowerCase().replace(/\s\s+/g, ' ').trim();
 };
 
-export const normaliseString = (str?: string): string => {
+export const normalizeString = (str?: string): string => {
   if (!str) {
     return '';
   }
