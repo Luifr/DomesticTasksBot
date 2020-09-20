@@ -21,8 +21,8 @@ const pingHeroku = (herokuUrl: string) => {
 let telegramBot: TelegramBot;
 if (isProd) {
   const herokuApp = process.env.HEROKU_APP!;
-  const herokuUrl = `https://${herokuApp}.herokuapp.com//bot${botToken}`;
-  telegramBot = new TelegramBot(botToken, { webHook: { port: PORT } });
+  const herokuUrl = `https://${herokuApp}.herokuapp.com:443`;
+  telegramBot = new TelegramBot(`${botToken}/bot${botToken}`, { webHook: { port: PORT } });
   telegramBot.setWebHook(herokuUrl);
   pingHeroku(herokuUrl);
 }

@@ -1,1 +1,1 @@
-wroker: npm start
+web: npm start
