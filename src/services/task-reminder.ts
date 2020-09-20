@@ -36,7 +36,7 @@ export const initReminders = async () => {
       // TODO: check if doer is home
       const remindBody = `\`${task.originalName}\`\n` +
         `Hoje é a vez do(a) \`${doer?.name}\``;
-      const nextRemindText = `${headerText} ${remindBody}`
+      const nextRemindText = `${headerText} ${remindBody}`;
 
       setTimeout(() => {
         telegramBot.sendMessage(chatId, nextRemindText, { parse_mode: 'Markdown' });
@@ -61,4 +61,4 @@ export const initReminders = async () => {
 
     });
   });
-}
+};
