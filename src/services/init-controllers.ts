@@ -1,6 +1,8 @@
+import { isProd } from '../helpers';
 import { DomesticTasksClient } from './client';
 import { onCallbackQuery } from './on-callback-query';
 import { onText } from './on-text';
+import { initReminders } from './task-reminder';
 import { getTelegramBot } from './telegram-bot';
 
 const telegramBot = getTelegramBot();
@@ -26,6 +28,8 @@ telegramBot.on('callback_query', async (msg) => {
   await onCallbackQuery(bot, msg);
 });
 
-// initReminders(); // TODO: uncomment
+if (isProd) {
+  initReminders();
+}
 
 console.log('DomesticTasks started running');
