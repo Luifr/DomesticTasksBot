@@ -7,7 +7,7 @@ if (
   !process.env.PROJECT_ID ||
   !process.env.BOT_TOKEN ||
   !process.env.DATABASE_NAME ||
-  (isProd && !process.env.HEROKU_URL)
+  (isProd && !process.env.HEROKU_APP)
 ) {
   throw Error('Please set environment variables!');
 }
