@@ -39,14 +39,19 @@ export const initReminders = async () => {
       const nextRemindText = `${headerText} ${remindBody}`;
 
       setTimeout(() => {
-        telegramBot.sendMessage(chatId, nextRemindText, { parse_mode: 'Markdown' });
+        const today = new Date();
+        const todayString = parseDate(today);
+        if (task.lastRemindDay < todayString) {
+          telegramBot.sendMessage(chatId, nextRemindText, { parse_mode: 'Markdown' });
+          task.lastRemindDay = todayString;
+          group.info.task.edit(task.name, { lastRemindDay: task.lastRemindDay });
+        }
         // TODO: check last day that is was done to know next day to remerber
         // TODO: get interval and timeout id to reset it in case of an edit
         // TODO: start timeout when creating a task
-        const today = new Date();
         const todayHour = today.getHours();
         if (todayHour > 11) {
-          today.setDate(today.getDate()+1);
+          today.setDate(today.getDate() + 1);
         }
         const nextRemindDate = new Date(`${parseDate(today)}T${remindHour}:00:00`).getTime();
         const remindInterval = task.frequency * msInADay;

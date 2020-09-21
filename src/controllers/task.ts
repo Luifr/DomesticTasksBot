@@ -1,5 +1,6 @@
 import { ITask, ITaskToCreate } from '../models/task';
 import * as uuid from 'uuid';
+import { parseDate } from '../helpers/date';
 
 export class TaskController {
 
@@ -28,13 +29,20 @@ export class TaskController {
       console.error('Task already exists');
       return;
     }
-    if (!newTask.id) {
-      newTask.id = uuid.v4();
-    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() -1);
+
+    const dbTask: ITask = {
+      ...newTask,
+      id: newTask.id ?? uuid.v4(),
+      lastRemindDay: parseDate(yesterday)
+    };
+
     tasks.push(newTask as ITask);
     return this.infoDoc.set(
       {
-        tasks
+        task: dbTask
       },
       { merge: true }
     );

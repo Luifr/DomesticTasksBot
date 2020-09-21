@@ -12,6 +12,7 @@ const pingHeroku = (herokuUrl: string) => {
     try {
       Axios.get(herokuUrl);
     }
+    catch { } // eslint-disable-line
     finally {
       pingHeroku(herokuUrl);
     }

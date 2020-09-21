@@ -19,4 +19,5 @@ export interface ITask {
   doers: number[];
   nextDoer: number;
   nextDay: string;
+  lastRemindDay: string;
 }
