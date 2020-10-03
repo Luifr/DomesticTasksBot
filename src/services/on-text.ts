@@ -43,7 +43,7 @@ export const onText = async (
 
   const cleanMsgTextRegexResulta = cleanMsgTextRegex.exec(msgText);
   if (!cleanMsgTextRegexResulta) {
-    console.error('Clean message regex failed');
+    console.error('Clean message regex failed, probably an error on bot username');
     return;
   }
   const cleanMsgText = cleanMsgTextRegexResulta[1];

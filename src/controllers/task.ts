@@ -7,7 +7,8 @@ export class TaskController {
   constructor(private infoDoc: FirebaseFirestore.DocumentReference) { }
 
   getAll = async (): Promise<ITask[]> => {
-    return (await this.infoDoc.get()).data()?.tasks as ITask[] || [];
+    const data = (await this.infoDoc.get()).data();
+    return data?.tasks as ITask[] || [];
   }
 
   getById = async (id: string): Promise<ITask | undefined> => {
@@ -39,11 +40,9 @@ export class TaskController {
       lastRemindDay: parseDate(yesterday)
     };
 
-    tasks.push(newTask as ITask);
+    tasks.push(dbTask);
     return this.infoDoc.set(
-      {
-        task: dbTask
-      },
+      { tasks },
       { merge: true }
     );
   }

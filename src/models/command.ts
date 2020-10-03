@@ -8,7 +8,7 @@ const commandsAndStates = {
   info: ['NAME'],
   feito: ['NAME'],
   editar: ['TASKS_MENU', 'EDIT_MENU'],
-  tarefas: [],
+  tarefas: ['MENU', 'TASK'],
   criar: ['TITLE', 'DESC', 'FREQ', 'DOER']
 } as const;
 
