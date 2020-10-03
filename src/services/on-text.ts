@@ -6,7 +6,7 @@ import {
 import { runCommand } from '../command/run-command';
 import { DomesticTasksClient } from './client';
 
-const botName = 'helper_alfred_bot';
+const botName = process.env.BOT_USERNAME;
 
 const emptyCommandRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? *$`, 'i');
 const commandWithArgRegex = new RegExp(`^/?(${commands.join('|')})(?:@${botName})? +(.*)$`, 'i');
@@ -40,7 +40,13 @@ export const onText = async (
 
   const emptyCommandExec = emptyCommandRegex.exec(msgText);
   const commandWithArgExec = commandWithArgRegex.exec(msgText);
-  const cleanMsgText = cleanMsgTextRegex.exec(msgText)![1];
+
+  const cleanMsgTextRegexResulta = cleanMsgTextRegex.exec(msgText);
+  if (!cleanMsgTextRegexResulta) {
+    console.error('Clean message regex failed');
+    return;
+  }
+  const cleanMsgText = cleanMsgTextRegexResulta[1];
 
 
   const state = client.getCurrentState();
