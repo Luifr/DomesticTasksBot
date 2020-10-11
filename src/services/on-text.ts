@@ -48,8 +48,11 @@ export const onText = async (
   }
   const cleanMsgText = cleanMsgTextRegexResulta[1];
 
-
   const state = client.getCurrentState();
+
+  if (cleanMsgText === 'debug') {
+    client.sendMessage(JSON.stringify(state));
+  }
 
   if (cleanMsgText === '.') {
     state.context = {};

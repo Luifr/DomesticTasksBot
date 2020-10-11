@@ -1,5 +1,7 @@
 import { TaskController } from './task';
 import { DoerController } from './doer';
+import { ITask } from '../models/task';
+import { IDoer } from '../models/doer';
 
 
 export class InfoController {
@@ -21,6 +23,26 @@ export class InfoController {
     });
     this.task = new TaskController(infoDocProxy);
     this.doer = new DoerController(infoDocProxy);
+  }
+
+  async getTaskDoers(task: ITask | number[] | string): Promise<IDoer[]> {
+    const doersIds: number[] = [];
+    if (typeof task === 'string' ) {
+      const dbTask = await this.task.getByName(task);
+      if (!dbTask) {
+        console.error('Task not found');
+        return [];
+      }
+      doersIds.push(...dbTask.doers);
+    }
+    else if (Array.isArray(task)) {
+      doersIds.push(...task);
+    }
+    else if (task.doers) {
+      doersIds.push(...task.doers);
+    }
+
+    return Promise.all(doersIds.map(doerId => this.doer.get(doerId) as Promise<IDoer>));
   }
 
 }

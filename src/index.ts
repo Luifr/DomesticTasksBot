@@ -37,4 +37,3 @@ if (isProd) {
 if (missingEnv.length > 0) {
   throw Error(`Please set the following environment variables:\n${missingEnv.join('\n')}`);
 }
-
