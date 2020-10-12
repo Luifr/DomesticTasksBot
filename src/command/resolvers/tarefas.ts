@@ -74,7 +74,6 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
         const { context } = client.getCurrentState<ITasksContext>();
         const currentTask = context.currentTask;
         const message = `Tarefa: ${currentTask.originalName}`;
-        // const nextDoer = (await client.db.info.doer.get(currentTask.doers[currentTask.nextDoer]))!;
 
         const tasksKeyboard: InlineKeyboardButton[][] = [];
 
@@ -94,7 +93,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
         doers.forEach((doer, index) =>
           tasksKeyboard.push([{
-            text: doer.name + (context.currentTask.nextDoer === index ? '🚩' : ''),
+            text: doer.name + (context.currentTask.nextDoer === index ? ' 🚩' : ''),
             callback_data: String(index)
           }])
         );
@@ -155,10 +154,6 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
     },
     TASK: async ({ client, cleanArg }) => {
-      // if (cleanArg ==='back') {
-      //   // TODO: create
-      //   return 'MENU';
-      // }
       if (cleanArg ==='delete') {
         // TODO: create
         client.sendMessage('Função delete nao implementada 😅');
@@ -186,11 +181,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       if (cleanArg === 'noop') {
         return 'DOERS';
       }
-      // if (cleanArg ==='back') {
-      //   return 'TASK';
-      // }
 
-      // TODO: check if arg is valid
       const doerIndex = +cleanArg;
       if (!isNaN(doerIndex)) {
         if (context.currentTask.nextDoer !== doerIndex) {
@@ -207,7 +198,6 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       }
       else {
         client.sendMessage('Escolha uma das opções do teclado', undefined, { selfDestruct: 1200 });
-        return 'DOERS';
       }
 
       return 'DOERS';

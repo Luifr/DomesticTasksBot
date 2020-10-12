@@ -2,11 +2,11 @@ import 'source-map-support/register';
 import { isProd } from './helpers';
 import './services/init-controllers';
 
-// TODO: ver o heroku rodar local
 // TODO: pegar o utils do approxima
 // TODO: arrumar estrutura das pastas
 // TODO: manager dos timeouts de reminder (conseguir acessar eles e editar de outros lugares)
 // TODO: mirgar para o mongodb?
+// TODO: logging/report system
 
 const missingEnv: string[] = [];
 

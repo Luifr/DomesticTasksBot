@@ -18,7 +18,6 @@ export const onText = async (
   const msgText = msg.text;
   const fromId = msg.from!.id;
 
-  // TODO: logging/report system
   if (msg.reply_to_message) return;
   if (!msgText) {
     console.error('No message text');
