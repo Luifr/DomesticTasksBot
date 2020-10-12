@@ -51,7 +51,7 @@ export const onText = async (
   const state = client.getCurrentState();
 
   if (cleanMsgText === 'debug') {
-    client.sendMessage(JSON.stringify(state));
+    client.sendMessage(JSON.stringify(state, null, 2));
   }
 
   if (cleanMsgText === '.') {

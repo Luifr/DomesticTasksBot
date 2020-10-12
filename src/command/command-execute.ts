@@ -9,9 +9,9 @@ import {
   voltarCommand,
   feitoCommand
 } from './resolvers';
-import { ICommandExecuter } from '../models/command';
+import { CommandExecuter } from '../models/command';
 
-export const commandExecuter: ICommandExecuter = {
+export const commandExecuter: CommandExecuter = {
   help: helpCommand,
   cadastro: cadastroCommand,
   sair: sairCommand,

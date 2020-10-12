@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { isProd } from './helpers';
 import './services/init-controllers';
 

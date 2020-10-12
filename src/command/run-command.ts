@@ -1,16 +1,15 @@
 import { cleanString, trimString } from '../helpers/string';
-import { Command, StateResolverFunction } from '../models/command';
+import { Command, StatesOf, StateTransitionFunction } from '../models/command';
 import { DomesticTasksClient } from '../services/client';
 import { commandExecuter } from './command-execute';
 
-export const runCommand = async (
+export const runCommand = async <T extends Command>(
   client: DomesticTasksClient,
-  command: Command,
+  command: T,
   arg?: string
 ) => {
   const state = client.getCurrentState();
-  let stateResolver: StateResolverFunction<Command>;
-
+  const currentState = state.currentState as StatesOf<T>;
   const noAuthRequiredCommands: Command[] = ['help', 'cadastro'];
 
   const doer = await client.db.info.doer.get(client.userId);
@@ -19,22 +18,36 @@ export const runCommand = async (
     client.sendMessage('Para usar esse comando primera faca o /cadastro');
     return;
   }
-  if (state.currentState === 'INITIAL' && typeof commandExecuter[command] === 'function') {
-    // @ts-ignore
-    stateResolver = await commandExecuter[command];
-  }
-  else {
-    // @ts-ignore
-    stateResolver = await commandExecuter[command][state.currentState];
-  }
 
-  const nextState = await stateResolver(client, cleanString(arg), trimString(arg));
+  const commandResolver = commandExecuter[command];
+
+  const cleanArg = cleanString(arg);
+  const originalArg = trimString(arg);
+
+  const commandTransitionHandler: StateTransitionFunction<T> =
+    // @ts-ignore
+    commandResolver.transitionHandlers[currentState];
+
+  const nextState = await commandTransitionHandler(client, cleanArg, originalArg);
+
+  if (nextState !== currentState) {
+    // @ts-ignore
+    commandResolver.eventCallbacks?.[currentState]?.onLeave?.(client);
+
+    // @ts-ignore eslint-ignore
+    commandResolver.eventCallbacks?.[currentState]
+      ?.onTransition?.[nextState]?.(client);
+  }
 
   if (nextState === 'END') {
+    commandResolver.eventCallbacks?.onEnd?.(client);
     state.currentState = 'INITIAL';
     state.currentCommand = '';
   }
   else {
+    // @ts-ignore
+    commandResolver.eventCallbacks?.[currentState]?.onEnter?.(client);
+
     state.currentState = nextState;
     state.currentCommand = command;
   }

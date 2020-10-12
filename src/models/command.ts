@@ -8,7 +8,7 @@ const commandsAndStates = {
   info: ['NAME'],
   feito: ['NAME'],
   editar: ['TASKS_MENU', 'EDIT_MENU'],
-  tarefas: ['MENU', 'TASK', 'IN_TASK'],
+  tarefas: ['MENU', 'TASK', 'DOERS', 'EDIT_DOERS'],
   criar: ['TITLE', 'DESC', 'FREQ', 'DOER']
 } as const;
 
@@ -19,28 +19,39 @@ export type Command = keyof typeof commandsAndStates;
 
 export type StatesOf<T extends Command> = typeof commandsAndStates[T][number];
 
+type CommandEventCallbacks<T extends Command> = {
+  [state in StatesOf<T>]?: {
+    onLeave?: StateEventFunction;
+    onEnter?: StateEventFunction;
+    onTransition?: {
+      [to in Exclude<StatesOf<T> | 'END', state>]?: StateEventFunction
+    }
+  }
+} & { onEnd?: StateEventFunction };
+
+type StateEventFunction = (client: DomesticTasksClient) => void;
+
 type StateResolverFunctionReturn<T extends Command> =
   Promise<StatesOf<T> | 'END'> |
   StatesOf<T> | 'END'
 
-type InitialFunctionResolver<T extends Command> = (
+type InitialStateTransitionFunction<T extends Command> = (
   client: DomesticTasksClient, arg?: string, originalArg?: string
 ) => StateResolverFunctionReturn<T>
 
-export type StateResolverFunction<T extends Command> = (
+export type StateTransitionFunction<T extends Command> = (
   client: DomesticTasksClient, arg: string, originalArg: string
 ) => StateResolverFunctionReturn<T>
 
-type CommandStateResolverMapper<T extends Command> = {
-  [state in StatesOf<T> | 'INITIAL']: state extends 'INITIAL' ?
-    InitialFunctionResolver<T> :
-    StateResolverFunction<T>
+type CommandTransitionHandlers<T extends Command> = {
+  [state in StatesOf<T> ]: StateTransitionFunction<T>
+} & { INITIAL: InitialStateTransitionFunction<T> };
+
+export type CommandStateResolver<T extends Command> = {
+  eventCallbacks?: CommandEventCallbacks<T>;
+  transitionHandlers: CommandTransitionHandlers<T>;
 }
 
-export type CommandStateResolver<T extends Command> = StatesOf<T> extends never ?
-  CommandStateResolverMapper<T> | InitialFunctionResolver<T> :
-  CommandStateResolverMapper<T>
-
-export type ICommandExecuter = {
+export type CommandExecuter = {
   [command in Command]: CommandStateResolver<command>
 }

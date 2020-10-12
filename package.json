@@ -41,6 +41,7 @@
     "node-telegram-bot-api": "^0.50.0",
     "pdf-parse": "^1.1.1",
     "remove-accents": "^0.4.2",
+    "source-map-support": "^0.5.19",
     "string-similarity": "^4.0.2",
     "ts-node-dev": "^1.0.0-pre.62",
     "typescript": "^4.0.2",

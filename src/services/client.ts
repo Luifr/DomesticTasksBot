@@ -88,7 +88,9 @@ export class DomesticTasksClient {
         ...{ chat_id: this.chatId, message_id: this.getMessageId() },
         ...options
       }
-    );
+    ).catch(() => {
+      // Mensagem nao modificada, mas esta tudo bem :)
+    });
   }
 
   /** Delete a message, if the argument is present, that message will be deleted
@@ -106,10 +108,6 @@ export class DomesticTasksClient {
 
   getCurrentState = <T = any>() => {
     return stateMachine.getState<T>(this.chatId, this.userId!);
-  }
-
-  getCurrentContext = <T = any>() => {
-    return stateMachine.getState<T>(this.chatId, this.userId!).context;
   }
 
 }
