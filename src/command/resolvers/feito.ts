@@ -11,12 +11,16 @@ const doTask = async (client: DomesticTasksClient, taskName: string) => {
   }
   const currentDoer = (await client.db.info.doer.get(task.doers[task.nextDoer]))!;
 
-  let nextDoer: IDoer;
+  let nextDoer: IDoer | undefined;
   do {
     if (++task.nextDoer >= task.doers.length) {
       task.nextDoer = 0;
     }
-    nextDoer = (await client.db.info.doer.get(task.doers[task.nextDoer]))!;
+    const nexDoerId = task.doers[task.nextDoer];
+    if (nexDoerId === -1) {
+      break;
+    }
+    nextDoer = (await client.db.info.doer.get(nexDoerId))!;
   } while (!nextDoer.isHome);
 
   const today = new Date();
@@ -29,8 +33,17 @@ const doTask = async (client: DomesticTasksClient, taskName: string) => {
 
   const nextDayText = task.frequency === 1 ? 'amanhã' : `${task.frequency} dias`;
 
-  const replyMessage = `${currentDoer.name} fez a tarefa \`${task.originalName}\`\n` +
-    `O(a) proximo(a) é ${nextDoer.name} ${nextDayText}`;
+  let replyMessage: string;
+
+  if (nextDoer) {
+    replyMessage = `${currentDoer.name} fez a tarefa \`${task.originalName}\`\n` +
+      `O(a) proximo(a) é ${nextDoer.name} ${nextDayText}`;
+  }
+  else {
+    replyMessage = `${currentDoer.name} fez a tarefa \`${task.originalName}\`\n` +
+      `O proximo dia é livre  😎`;
+  }
+
 
   client.sendMessage(replyMessage, { parse_mode: 'Markdown' });
 };

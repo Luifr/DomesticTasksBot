@@ -3,12 +3,44 @@ import { CommandStateResolver } from '../../models/command';
 import { ITask } from '../../models/task';
 import { DomesticTasksClient } from '../../services/client';
 
+enum TasksCallBack {
+  VOLTAR = 'back',
+  FECHAR = 'close'
+}
+
 interface ITasksContext {
   tasks: ITask[];
   currentTask: ITask;
   edit: boolean;
   messageId: number;
+  editDoersIndexes: number[];
 }
+
+const getDoersKeyboard = async (client: DomesticTasksClient, doersIds?: number[]) => {
+  const doers = await client.db.info.doer.getAll();
+  const keyboard = doers.map(doer => {
+    const isHomeEmoticon = doer.isHome ? '🏠' : '✈️';
+    return [{
+      text: `${isHomeEmoticon} - ${doer.nickName || doer.name}`,
+      callback_data: String(doer.userId)
+    }];
+  });
+
+  keyboard.push([{ text: 'Dia livre', callback_data: '-1' }]);
+
+  doersIds?.forEach((doer, index) => {
+    const doerStr = String(doer);
+    const doerIndex = keyboard.findIndex(key => key[0].callback_data === doerStr);
+    keyboard[doerIndex][0].text += ` - ${index + 1}`;
+  });
+
+  if (doersIds && doersIds.length > 0) {
+    keyboard.push([{ text: 'Desfazer', callback_data: 'pop' }]);
+  }
+  keyboard.push([{ text: 'Salvar', callback_data: 'save' }]);
+  keyboard.push([{ text: 'Cancelar', callback_data: 'cancel' }]);
+  return keyboard;
+};
 
 const sendTasksKeyboard = (
   client: DomesticTasksClient, message: string,
@@ -16,8 +48,8 @@ const sendTasksKeyboard = (
 ) => {
   const { context } = client.getCurrentState<ITasksContext>();
 
-  tasksKeyboard.push([{ text: 'Voltar ↩️', callback_data: 'back' }]);
-  tasksKeyboard.push([{ text: 'Fechar menu 🚪', callback_data: 'close' }]);
+  tasksKeyboard.push([{ text: 'Voltar ↩️', callback_data: TasksCallBack.VOLTAR }]);
+  tasksKeyboard.push([{ text: 'Fechar menu 🚪', callback_data: TasksCallBack.FECHAR }]);
   client.editMessage(
     message,
     { reply_markup: { inline_keyboard: tasksKeyboard }, message_id: context.messageId }
@@ -53,7 +85,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
         }
 
         tasksKeyboard.push([{ text: 'Criar nova tarefa ➕', callback_data: 'create' }]);
-        tasksKeyboard.push([{ text: 'Fechar menu 🚪', callback_data: 'close' }]);
+        tasksKeyboard.push([{ text: 'Fechar menu 🚪', callback_data: TasksCallBack.FECHAR }]);
         if (!context.messageId) {
           const messageResponse = await client.sendMessage(
             message,
@@ -88,15 +120,19 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       onEnter: async (client) => {
         const { context } = client.getCurrentState<ITasksContext>();
         const doers = await client.db.info.getTaskDoers(context.currentTask);
-
+        context.editDoersIndexes = doers.map(doer => doer?.userId || -1);
         const tasksKeyboard: InlineKeyboardButton[][] = [];
 
-        doers.forEach((doer, index) =>
+        doers.forEach((doer, index) => {
+          let name = 'Dia livre';
+          if (doer) {
+            name = doer.name;
+          }
           tasksKeyboard.push([{
-            text: doer.name + (context.currentTask.nextDoer === index ? ' 🚩' : ''),
+            text: name + (context.currentTask.nextDoer === index ? ' 🚩' : ''),
             callback_data: String(index)
-          }])
-        );
+          }]);
+        });
 
 
         tasksKeyboard.push([{ text: '=========', callback_data: 'noop' }]);
@@ -108,17 +144,30 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
         sendTasksKeyboard(client, message, tasksKeyboard);
       }
+    },
+    EDIT_DOERS: {
+      onEnter: async (client) => {
+        const { context } = client.getCurrentState<ITasksContext>();
+        const responseText = 'Selecione os responsaveis\n' +
+          'Quando acabar é só salvar';
+        client.editMessage(
+          responseText,
+          {
+            reply_markup: {
+              inline_keyboard: await getDoersKeyboard(client, context.editDoersIndexes)
+            }
+          }
+        );
+      }
     }
   },
   transitionHandlers: {
-    ANY: ({ client, cleanArg }) => {
-      const state = client.getCurrentState();
-      if (cleanArg ==='close') {
+    ANY: ({ cleanArg, backToLastState }) => {
+      if (cleanArg === TasksCallBack.FECHAR) {
         return 'END';
       }
-      else if (cleanArg ==='back') {
-        state.statesStack.pop();
-        return state.statesStack[state.statesStack.length - 1] as any;
+      else if (cleanArg === TasksCallBack.VOLTAR) {
+        return backToLastState();
       }
       return;
     },
@@ -136,7 +185,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       // ${...tasks}
       // criar
       // fechar
-      if (cleanArg ==='create') {
+      if (cleanArg === 'create') {
         // TODO: create
         client.sendMessage('Função create nao implementada 😅');
         return 'END';
@@ -154,7 +203,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
     },
     TASK: async ({ client, cleanArg }) => {
-      if (cleanArg ==='delete') {
+      if (cleanArg === 'delete') {
         // TODO: create
         client.sendMessage('Função delete nao implementada 😅');
         return 'END';
@@ -192,8 +241,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
           );
         }
       }
-      else if (cleanArg ==='edit') {
-        client.sendMessage('Função edit nao implementada 😅');
+      else if (cleanArg === 'edit') {
         return 'EDIT_DOERS';
       }
       else {
@@ -202,8 +250,40 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
       return 'DOERS';
     },
-    EDIT_DOERS: () => {
-      return 'EDIT_DOERS';
+    EDIT_DOERS: async ({ client, cleanArg, isCallbackData, backToLastState }) => {
+
+      if (!isCallbackData) {
+        client.sendMessage('Escolha uma das opções do teclado', undefined, { selfDestruct: 1200 });
+        return 'EDIT_DOERS';
+      }
+
+      const { context } = client.getCurrentState<ITasksContext>();
+
+      if (cleanArg === 'save') {
+        if (context.editDoersIndexes.length === 0) {
+          const responseText = 'É preciso ter pelo menos uma pessoa';
+          client.sendMessage(responseText, undefined, { selfDestruct: 3300 });
+          return 'EDIT_DOERS';
+        }
+        context.currentTask.doers = context.editDoersIndexes;
+        await client.db.info.task.edit(context.currentTask.name, {
+          doers: context.editDoersIndexes
+        });
+        client.sendMessage('Ordem nova salva!', undefined, { selfDestruct: 3300 });
+        return backToLastState();
+      }
+      else if (cleanArg === 'cancel') {
+        return backToLastState();
+      }
+
+      if (cleanArg === 'pop') {
+        context.editDoersIndexes.pop();
+      }
+      else {
+        // TODO: check if can transform arg to number
+        context.editDoersIndexes.push(+cleanArg);
+      }
+      return 'EDIT_DOERS' as const;
     }
   }
 };

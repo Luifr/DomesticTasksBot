@@ -7,6 +7,7 @@ import './services/init-controllers';
 // TODO: manager dos timeouts de reminder (conseguir acessar eles e editar de outros lugares)
 // TODO: mirgar para o mongodb?
 // TODO: logging/report system
+// TODO: quando o dia for livre precisa agendar pra passar sozinho, fak
 
 const missingEnv: string[] = [];
 

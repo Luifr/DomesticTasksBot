@@ -40,11 +40,19 @@ type InitialStateTransitionFunction<T extends Command> = (args: {
 }) => StateResolverFunctionReturn<T>
 
 type AnyTransitionFunction<T extends Command> = (arg: {
-  client: DomesticTasksClient, cleanArg?: string, originalArg?: string, isCallbackData: boolean
+  client: DomesticTasksClient,
+  cleanArg?: string,
+  originalArg?: string,
+  isCallbackData: boolean,
+  backToLastState: () => StatesOf<T>
 }) => StateResolverFunctionReturn<T> | '' | undefined
 
 export type StateTransitionFunction<T extends Command> = (args: {
-  client: DomesticTasksClient, cleanArg: string, originalArg: string, isCallbackData: boolean
+  client: DomesticTasksClient,
+  cleanArg: string,
+  originalArg: string,
+  isCallbackData: boolean,
+  backToLastState: () => StatesOf<T>
 }) => StateResolverFunctionReturn<T>
 
 type CommandTransitionHandlers<T extends Command> = {

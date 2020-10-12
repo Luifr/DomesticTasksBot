@@ -1,5 +1,5 @@
 import { getTodayString } from '../../helpers/date';
-import { CommandStateResolver, StateTransitionFunction } from '../../models/command';
+import { CommandStateResolver } from '../../models/command';
 import { DomesticTasksClient } from '../../services/client';
 
 interface ICriarContext {
@@ -10,7 +10,7 @@ interface ICriarContext {
   doers: number[];
 }
 
-const setTitle: StateTransitionFunction<'criar'> = async ({ client, cleanArg, originalArg }) => {
+const setTitle = async (client: DomesticTasksClient, cleanArg: string, originalArg: string) => {
   const { context } = client.getCurrentState<ICriarContext>();
   const task = await client.db.info.task.getByName(cleanArg);
   if (task) {
@@ -52,9 +52,9 @@ export const criarCommand: CommandStateResolver<'criar'> = {
         client.sendMessage(`Qual o nome da tarefa?`);
         return 'TITLE';
       }
-      return setTitle({ client, cleanArg, originalArg: originalArg!, isCallbackData: false });
+      return setTitle(client, cleanArg, originalArg!);
     },
-    TITLE: setTitle,
+    TITLE: ({ client, cleanArg, originalArg }) => setTitle(client, cleanArg, originalArg),
     DESC: ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ICriarContext>();
       context.desc = cleanArg;

@@ -25,9 +25,9 @@ export class InfoController {
     this.doer = new DoerController(infoDocProxy);
   }
 
-  async getTaskDoers(task: ITask | number[] | string): Promise<IDoer[]> {
+  async getTaskDoers(task: ITask | number[] | string): Promise<(IDoer | undefined)[]> {
     const doersIds: number[] = [];
-    if (typeof task === 'string' ) {
+    if (typeof task === 'string') {
       const dbTask = await this.task.getByName(task);
       if (!dbTask) {
         console.error('Task not found');
@@ -42,7 +42,12 @@ export class InfoController {
       doersIds.push(...task.doers);
     }
 
-    return Promise.all(doersIds.map(doerId => this.doer.get(doerId) as Promise<IDoer>));
+    return Promise.all(doersIds.map(doerId => {
+      if (doerId === -1) {
+        return undefined;
+      }
+      return this.doer.get(doerId) as Promise<IDoer>;
+    }));
   }
 
 }

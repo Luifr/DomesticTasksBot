@@ -20,20 +20,37 @@ export const runCommand = async <T extends Command>(
     return;
   }
 
+  const backToLastState = (): any => {
+    state.statesStack.pop();
+    return state.statesStack[state.statesStack.length - 1];
+  };
+
   const commandResolver = commandExecuter[command];
 
   const cleanArg = cleanString(arg);
   const originalArg = trimString(arg);
 
   const anyHandlerResult = await commandResolver.transitionHandlers.
-    ANY?.({ client, cleanArg, originalArg, isCallbackData });
+    ANY?.({
+      client,
+      cleanArg,
+      originalArg,
+      isCallbackData,
+      backToLastState: backToLastState as any
+    });
 
   const commandTransitionHandler: StateTransitionFunction<T> =
     // @ts-ignore
     commandResolver.transitionHandlers[currentState];
 
   const nextState = anyHandlerResult ||
-    await commandTransitionHandler({ client, cleanArg, originalArg, isCallbackData });
+    await commandTransitionHandler({
+      client,
+      cleanArg,
+      originalArg,
+      isCallbackData,
+      backToLastState
+    });
 
   if (nextState !== currentState) {
     if (nextState !== state.statesStack[state.statesStack.length - 1]) {
@@ -41,20 +58,20 @@ export const runCommand = async <T extends Command>(
     }
 
     // @ts-ignore
-    commandResolver.eventCallbacks?.[currentState]?.onLeave?.(client);
+    await commandResolver.eventCallbacks?.[currentState]?.onLeave?.(client);
 
     // @ts-ignore eslint-ignore
-    commandResolver.eventCallbacks?.[currentState]
+    await commandResolver.eventCallbacks?.[currentState]
       ?.onTransition?.[nextState]?.(client);
   }
 
   if (nextState === 'END') {
-    commandResolver.eventCallbacks?.onEnd?.(client);
+    await commandResolver.eventCallbacks?.onEnd?.(client);
     client.resetState();
   }
   else {
     // @ts-ignore
-    commandResolver.eventCallbacks?.[nextState]?.onEnter?.(client);
+    await commandResolver.eventCallbacks?.[nextState]?.onEnter?.(client);
 
     state.currentState = nextState;
     state.currentCommand = command;
