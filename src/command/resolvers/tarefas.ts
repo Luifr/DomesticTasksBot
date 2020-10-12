@@ -112,6 +112,17 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
     }
   },
   transitionHandlers: {
+    ANY: (client, arg) => {
+      const state = client.getCurrentState();
+      if (arg === 'close') {
+        return 'END';
+      }
+      else if (arg === 'back') {
+        state.statesStack.pop();
+        return state.statesStack[state.statesStack.length-1] as any;
+      }
+      return;
+    },
     INITIAL: async (client) => {
 
       const tasks = await client.db.info.task.getAll();
@@ -126,10 +137,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       // ${...tasks}
       // criar
       // fechar
-      if (arg === 'close') {
-        return 'END';
-      }
-      else if (arg === 'create') {
+      if (arg === 'create') {
         // TODO: create
         client.sendMessage('Função create nao implementada 😅');
         return 'END';
@@ -147,14 +155,11 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
     },
     TASK: async (client, arg) => {
-      if (arg === 'close') {
-        return 'END';
-      }
-      else if (arg === 'back') {
-        // TODO: create
-        return 'MENU';
-      }
-      else if (arg === 'delete') {
+      // if (arg === 'back') {
+      //   // TODO: create
+      //   return 'MENU';
+      // }
+      if (arg === 'delete') {
         // TODO: create
         client.sendMessage('Função delete nao implementada 😅');
         return 'END';
@@ -181,12 +186,9 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       if (arg === 'noop') {
         return 'DOERS';
       }
-      if (arg === 'back') {
-        return 'TASK';
-      }
-      if (arg === 'close') {
-        return 'END';
-      }
+      // if (arg === 'back') {
+      //   return 'TASK';
+      // }
 
       // TODO: check if arg is valid
       const doerIndex = +arg;

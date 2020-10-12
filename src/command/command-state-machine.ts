@@ -2,6 +2,7 @@ import { Command } from '../models/command';
 
 interface ICommandStateMachineUserEntry<T> {
   currentState: string;
+  statesStack: string[];
   currentCommand: Command | '';
   context: T;
 }
@@ -25,7 +26,8 @@ class CommandStateMachine {
       this.stateMachine[chatId][userId] = {
         context: {},
         currentCommand: '',
-        currentState: 'INITIAL'
+        currentState: 'INITIAL',
+        statesStack: ['INITIAL']
       };
     }
     return this.stateMachine[chatId][userId];
@@ -35,11 +37,10 @@ class CommandStateMachine {
     if (!this.stateMachine[chatId]) {
       this.stateMachine[chatId] = {};
     }
-    this.stateMachine[chatId][userId] = {
-      context: {},
-      currentCommand: '',
-      currentState: 'INITIAL'
-    };
+    this.stateMachine[chatId][userId].context = {};
+    this.stateMachine[chatId][userId].currentCommand = '';
+    this.stateMachine[chatId][userId].currentState = 'INITIAL';
+    this.stateMachine[chatId][userId].statesStack = ['INITIAL'];
   }
 
 

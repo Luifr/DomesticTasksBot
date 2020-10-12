@@ -24,13 +24,21 @@ export const runCommand = async <T extends Command>(
   const cleanArg = cleanString(arg);
   const originalArg = trimString(arg);
 
+  const anyHandlerResult = await commandResolver.transitionHandlers.
+    ANY?.(client, cleanArg, originalArg);
+
   const commandTransitionHandler: StateTransitionFunction<T> =
     // @ts-ignore
     commandResolver.transitionHandlers[currentState];
 
-  const nextState = await commandTransitionHandler(client, cleanArg, originalArg);
+  const nextState = anyHandlerResult ||
+    await commandTransitionHandler(client, cleanArg, originalArg);
 
   if (nextState !== currentState) {
+    if (nextState !== state.statesStack[state.statesStack.length-1]) {
+      state.statesStack.push(nextState);
+    }
+
     // @ts-ignore
     commandResolver.eventCallbacks?.[currentState]?.onLeave?.(client);
 
@@ -41,12 +49,11 @@ export const runCommand = async <T extends Command>(
 
   if (nextState === 'END') {
     commandResolver.eventCallbacks?.onEnd?.(client);
-    state.currentState = 'INITIAL';
-    state.currentCommand = '';
+    client.resetState();
   }
   else {
     // @ts-ignore
-    commandResolver.eventCallbacks?.[currentState]?.onEnter?.(client);
+    commandResolver.eventCallbacks?.[nextState]?.onEnter?.(client);
 
     state.currentState = nextState;
     state.currentCommand = command;

@@ -39,13 +39,20 @@ type InitialStateTransitionFunction<T extends Command> = (
   client: DomesticTasksClient, arg?: string, originalArg?: string
 ) => StateResolverFunctionReturn<T>
 
+type AnyTransitionFunction<T extends Command> = (
+  client: DomesticTasksClient, arg?: string, originalArg?: string
+) => StateResolverFunctionReturn<T> | '' | undefined
+
 export type StateTransitionFunction<T extends Command> = (
   client: DomesticTasksClient, arg: string, originalArg: string
 ) => StateResolverFunctionReturn<T>
 
 type CommandTransitionHandlers<T extends Command> = {
-  [state in StatesOf<T> ]: StateTransitionFunction<T>
-} & { INITIAL: InitialStateTransitionFunction<T> };
+  [state in StatesOf<T>]: StateTransitionFunction<T>
+} & {
+  INITIAL: InitialStateTransitionFunction<T>;
+  ANY?: AnyTransitionFunction<T>;
+};
 
 export type CommandStateResolver<T extends Command> = {
   eventCallbacks?: CommandEventCallbacks<T>;

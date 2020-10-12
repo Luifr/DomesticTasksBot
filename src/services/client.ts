@@ -110,4 +110,8 @@ export class DomesticTasksClient {
     return stateMachine.getState<T>(this.chatId, this.userId!);
   }
 
+  resetState = () => {
+    return stateMachine.resetState(this.chatId, this.userId!);
+  }
+
 }

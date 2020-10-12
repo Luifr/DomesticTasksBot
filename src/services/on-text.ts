@@ -52,12 +52,11 @@ export const onText = async (
 
   if (cleanMsgText === 'debug') {
     client.sendMessage(JSON.stringify(state, null, 2));
+    return;
   }
 
   if (cleanMsgText === '.') {
-    state.context = {};
-    state.currentCommand = '';
-    state.currentState = 'INITIAL';
+    client.resetState();
     return;
   }
 
