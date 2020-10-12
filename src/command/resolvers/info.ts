@@ -40,16 +40,16 @@ const showTaskInfo = async (client: DomesticTasksClient, taskName: string) => {
 
 export const infoCommand: CommandStateResolver<'info'> = {
   transitionHandlers: {
-    INITIAL: async (client, arg) => {
-      if (!arg) {
+    INITIAL: async ({ client, cleanArg }) => {
+      if (!cleanArg) {
         client.sendMessage('Me mande o nome da tarefa');
         return 'NAME';
       }
-      showTaskInfo(client, arg);
+      showTaskInfo(client, cleanArg);
       return 'END';
     },
-    NAME: (client, arg) => {
-      showTaskInfo(client, arg);
+    NAME: ({ client, cleanArg }) => {
+      showTaskInfo(client, cleanArg);
       return 'END';
     }
   }

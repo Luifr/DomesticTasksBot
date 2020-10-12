@@ -112,18 +112,18 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
     }
   },
   transitionHandlers: {
-    ANY: (client, arg) => {
+    ANY: ({ client, cleanArg }) => {
       const state = client.getCurrentState();
-      if (arg === 'close') {
+      if (cleanArg ==='close') {
         return 'END';
       }
-      else if (arg === 'back') {
+      else if (cleanArg ==='back') {
         state.statesStack.pop();
-        return state.statesStack[state.statesStack.length-1] as any;
+        return state.statesStack[state.statesStack.length - 1] as any;
       }
       return;
     },
-    INITIAL: async (client) => {
+    INITIAL: async ({ client }) => {
 
       const tasks = await client.db.info.task.getAll();
 
@@ -133,43 +133,43 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
       return 'MENU' as const;
     },
-    MENU: async (client, arg) => {
+    MENU: async ({ client, cleanArg }) => {
       // ${...tasks}
       // criar
       // fechar
-      if (arg === 'create') {
+      if (cleanArg ==='create') {
         // TODO: create
         client.sendMessage('Função create nao implementada 😅');
         return 'END';
       }
-      else if (!arg.startsWith('open:')) {
+      else if (!cleanArg.startsWith('open:')) {
         client.sendMessage('Escolha uma das opções do teclado', undefined, { selfDestruct: 1200 });
         return 'MENU';
       }
 
-      const selectedTask = arg.substring('open:'.length);
+      const selectedTask = cleanArg.substring('open:'.length);
       const { context } = client.getCurrentState<ITasksContext>();
       context.currentTask = context.tasks.find(task => task.name === selectedTask)!;
 
       return 'TASK';
 
     },
-    TASK: async (client, arg) => {
-      // if (arg === 'back') {
+    TASK: async ({ client, cleanArg }) => {
+      // if (cleanArg ==='back') {
       //   // TODO: create
       //   return 'MENU';
       // }
-      if (arg === 'delete') {
+      if (cleanArg ==='delete') {
         // TODO: create
         client.sendMessage('Função delete nao implementada 😅');
         return 'END';
       }
-      else if (!arg.startsWith('show:')) {
+      else if (!cleanArg.startsWith('show:')) {
         client.sendMessage('Escolha uma das opções do teclado', undefined, { selfDestruct: 1200 });
         return 'TASK';
       }
 
-      const show = arg.substring('show:'.length);
+      const show = cleanArg.substring('show:'.length);
 
       if (show === 'doers') {
         return 'DOERS';
@@ -180,18 +180,18 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       }
 
     },
-    DOERS: async (client, arg) => {
+    DOERS: async ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ITasksContext>();
 
-      if (arg === 'noop') {
+      if (cleanArg === 'noop') {
         return 'DOERS';
       }
-      // if (arg === 'back') {
+      // if (cleanArg ==='back') {
       //   return 'TASK';
       // }
 
       // TODO: check if arg is valid
-      const doerIndex = +arg;
+      const doerIndex = +cleanArg;
       if (!isNaN(doerIndex)) {
         if (context.currentTask.nextDoer !== doerIndex) {
           context.currentTask.nextDoer = doerIndex;
@@ -201,7 +201,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
           );
         }
       }
-      else if (arg === 'edit') {
+      else if (cleanArg ==='edit') {
         client.sendMessage('Função edit nao implementada 😅');
         return 'EDIT_DOERS';
       }
@@ -212,7 +212,7 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
       return 'DOERS';
     },
-    EDIT_DOERS: (_client, _arg) => {
+    EDIT_DOERS: () => {
       return 'EDIT_DOERS';
     }
   }

@@ -10,18 +10,14 @@ interface ICriarContext {
   doers: number[];
 }
 
-const setTitle: StateTransitionFunction<'criar'> = async (
-  client: DomesticTasksClient,
-  arg: string,
-  originalArg: string
-) => {
+const setTitle: StateTransitionFunction<'criar'> = async ({ client, cleanArg, originalArg }) => {
   const { context } = client.getCurrentState<ICriarContext>();
-  const task = await client.db.info.task.getByName(arg);
+  const task = await client.db.info.task.getByName(cleanArg);
   if (task) {
     client.sendMessage('Ja existe uma tarefa com esse nome, tente outro');
     return 'TITLE';
   }
-  context.title = arg;
+  context.title = cleanArg;
   context.originalTitle = originalArg;
   const replyText = `De uma descricao para a tarefa \`${originalArg}\`!`;
   client.sendMessage(replyText, { parse_mode: 'Markdown' });
@@ -51,28 +47,28 @@ const getDoersKeyboard = async (client: DomesticTasksClient, doersIds?: number[]
 
 export const criarCommand: CommandStateResolver<'criar'> = {
   transitionHandlers: {
-    INITIAL: (client, arg, originalArg) => {
-      if (!arg) {
+    INITIAL: ({ client, cleanArg, originalArg }) => {
+      if (!cleanArg) {
         client.sendMessage(`Qual o nome da tarefa?`);
         return 'TITLE';
       }
-      return setTitle(client, arg, originalArg!);
+      return setTitle({ client, cleanArg, originalArg: originalArg!, isCallbackData: false });
     },
     TITLE: setTitle,
-    DESC: (client, arg) => {
+    DESC: ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ICriarContext>();
-      context.desc = arg;
+      context.desc = cleanArg;
       client.sendMessage(`A cada quantos dias?`);
       return 'FREQ';
     },
-    FREQ: async (client, arg) => {
-      const freq = +arg;
+    FREQ: async ({ client, cleanArg }) => {
+      const freq = +cleanArg;
       if (isNaN(freq)) {
         client.sendMessage('Preciso de um numero, de quantos em quantos dias a tarefa se repete!');
         return 'FREQ';
       }
       const { context } = client.getCurrentState<ICriarContext>();
-      context.freq = +arg;
+      context.freq = +cleanArg;
       context.doers = [];
       let responseText = 'Selecione os responsaveis\n';
       responseText += 'Quando acabar é só enviar';
@@ -84,15 +80,15 @@ export const criarCommand: CommandStateResolver<'criar'> = {
       });
       return 'DOER';
     },
-    DOER: async (client, arg) => {
+    DOER: async ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ICriarContext>();
-      if (arg != 'enviar') {
-        if (arg === 'pop') {
+      if (cleanArg != 'enviar') {
+        if (cleanArg ==='pop') {
           context.doers.pop();
         }
         else {
           // TODO: check if can transform arg to number
-          context.doers.push(+arg);
+          context.doers.push(+cleanArg);
         }
         let responseText = 'Selecione os responsaveis\n';
         responseText += 'Quando acabar é só enviar';

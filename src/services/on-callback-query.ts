@@ -15,6 +15,6 @@ export const onCallbackQuery = async (
   }
 
   client.answerCallbackQuery(); // TODO: fix this, ver no approxima
-  runCommand(client, state.currentCommand, callBackData);
+  runCommand(client, state.currentCommand, callBackData, true);
 
 };

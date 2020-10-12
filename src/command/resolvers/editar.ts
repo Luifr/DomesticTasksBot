@@ -6,19 +6,19 @@ interface IEditContext {
 
 export const editarCommand: CommandStateResolver<'editar'> = {
   transitionHandlers: {
-    INITIAL: (client, arg) => {
-      if (!arg) {
+    INITIAL: ({ client, cleanArg }) => {
+      if (!cleanArg) {
         client.sendMessage('Que tarefa que voce quer editar?');
         return 'TASKS_MENU';
       }
-      client.getCurrentState<IEditContext>().context.name = arg;
+      client.getCurrentState<IEditContext>().context.name = cleanArg;
       return 'EDIT_MENU';
     },
     // TODO: edit
-    TASKS_MENU: (_client, _arg) => {
+    TASKS_MENU: () => {
       return 'END';
     },
-    EDIT_MENU: (_client, _arg) => {
+    EDIT_MENU: () => {
       return 'END';
     }
   }

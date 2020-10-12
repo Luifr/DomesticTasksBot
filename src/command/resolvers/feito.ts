@@ -37,16 +37,16 @@ const doTask = async (client: DomesticTasksClient, taskName: string) => {
 
 export const feitoCommand: CommandStateResolver<'feito'> = {
   transitionHandlers: {
-    INITIAL: async (client, arg) => {
-      if (!arg) {
+    INITIAL: async ({ client, cleanArg }) => {
+      if (!cleanArg) {
         client.sendMessage('Me mande o nome da tarefa');
         return 'NAME';
       }
-      doTask(client, arg);
+      doTask(client, cleanArg);
       return 'END';
     },
-    NAME: (client, arg) => {
-      doTask(client, arg);
+    NAME: ({ client, cleanArg }) => {
+      doTask(client, cleanArg);
       return 'END';
     }
   }

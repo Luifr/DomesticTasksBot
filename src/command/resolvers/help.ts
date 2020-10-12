@@ -2,7 +2,7 @@ import { CommandStateResolver } from '../../models/command';
 
 export const helpCommand: CommandStateResolver<'help'> = {
   transitionHandlers: {
-    INITIAL: (client, _arg) => {
+    INITIAL: ({ client })=> {
       const contact = process.env.DEV_CONTACT;
       const contactText = contact ?
         `Qualquer duvida ou sugestão, so chamar: ${contact}` :

@@ -6,7 +6,8 @@ import { commandExecuter } from './command-execute';
 export const runCommand = async <T extends Command>(
   client: DomesticTasksClient,
   command: T,
-  arg?: string
+  arg?: string,
+  isCallbackData = false
 ) => {
   const state = client.getCurrentState();
   const currentState = state.currentState as StatesOf<T>;
@@ -25,17 +26,17 @@ export const runCommand = async <T extends Command>(
   const originalArg = trimString(arg);
 
   const anyHandlerResult = await commandResolver.transitionHandlers.
-    ANY?.(client, cleanArg, originalArg);
+    ANY?.({ client, cleanArg, originalArg, isCallbackData });
 
   const commandTransitionHandler: StateTransitionFunction<T> =
     // @ts-ignore
     commandResolver.transitionHandlers[currentState];
 
   const nextState = anyHandlerResult ||
-    await commandTransitionHandler(client, cleanArg, originalArg);
+    await commandTransitionHandler({ client, cleanArg, originalArg, isCallbackData });
 
   if (nextState !== currentState) {
-    if (nextState !== state.statesStack[state.statesStack.length-1]) {
+    if (nextState !== state.statesStack[state.statesStack.length - 1]) {
       state.statesStack.push(nextState);
     }
 

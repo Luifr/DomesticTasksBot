@@ -2,7 +2,7 @@ import { CommandStateResolver } from '../../models/command';
 
 export const cadastroCommand: CommandStateResolver<'cadastro'> = {
   transitionHandlers: {
-    INITIAL: async (client, _arg) => {
+    INITIAL: async ({ client })=> {
       const doerController = client.db.info.doer;
       const doer = await doerController.get(client.userId);
       if (doer) {

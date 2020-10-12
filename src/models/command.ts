@@ -35,17 +35,17 @@ type StateResolverFunctionReturn<T extends Command> =
   Promise<StatesOf<T> | 'END'> |
   StatesOf<T> | 'END'
 
-type InitialStateTransitionFunction<T extends Command> = (
-  client: DomesticTasksClient, arg?: string, originalArg?: string
-) => StateResolverFunctionReturn<T>
+type InitialStateTransitionFunction<T extends Command> = (args: {
+  client: DomesticTasksClient, cleanArg?: string, originalArg?: string
+}) => StateResolverFunctionReturn<T>
 
-type AnyTransitionFunction<T extends Command> = (
-  client: DomesticTasksClient, arg?: string, originalArg?: string
-) => StateResolverFunctionReturn<T> | '' | undefined
+type AnyTransitionFunction<T extends Command> = (arg: {
+  client: DomesticTasksClient, cleanArg?: string, originalArg?: string, isCallbackData: boolean
+}) => StateResolverFunctionReturn<T> | '' | undefined
 
-export type StateTransitionFunction<T extends Command> = (
-  client: DomesticTasksClient, arg: string, originalArg: string
-) => StateResolverFunctionReturn<T>
+export type StateTransitionFunction<T extends Command> = (args: {
+  client: DomesticTasksClient, cleanArg: string, originalArg: string, isCallbackData: boolean
+}) => StateResolverFunctionReturn<T>
 
 type CommandTransitionHandlers<T extends Command> = {
   [state in StatesOf<T>]: StateTransitionFunction<T>
