@@ -1,5 +1,5 @@
 import { getDaysFromDiff, getHoursFromDiff } from '../../helpers/date';
-import { CommandStateResolver } from '../../models/command';
+import { CommandStatesResolver } from '../../models/command';
 import { DomesticTasksClient } from '../../services/client';
 
 const showTaskInfo = async (client: DomesticTasksClient, taskName: string) => {
@@ -38,17 +38,17 @@ const showTaskInfo = async (client: DomesticTasksClient, taskName: string) => {
   client.sendMessage(taskInfo);
 };
 
-export const infoCommand: CommandStateResolver<'info'> = {
-  transitionHandlers: {
-    INITIAL: async ({ client, cleanArg }) => {
-      if (!cleanArg) {
-        client.sendMessage('Me mande o nome da tarefa');
-        return 'NAME';
-      }
-      showTaskInfo(client, cleanArg);
-      return 'END';
-    },
-    NAME: ({ client, cleanArg }) => {
+export const infoCommand: CommandStatesResolver<'info'> = {
+  INITIAL: async ({ client, cleanArg }) => {
+    if (!cleanArg) {
+      client.sendMessage('Me mande o nome da tarefa');
+      return 'NAME';
+    }
+    showTaskInfo(client, cleanArg);
+    return 'END';
+  },
+  NAME: {
+    transitionHandle: ({ client, cleanArg }) => {
       showTaskInfo(client, cleanArg);
       return 'END';
     }

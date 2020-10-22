@@ -1,5 +1,5 @@
 import { getTodayString } from '../../helpers/date';
-import { CommandStateResolver } from '../../models/command';
+import { CommandStatesResolver } from '../../models/command';
 import { DomesticTasksClient } from '../../services/client';
 
 interface ICriarContext {
@@ -45,23 +45,27 @@ const getDoersKeyboard = async (client: DomesticTasksClient, doersIds?: number[]
   return keyboard;
 };
 
-export const criarCommand: CommandStateResolver<'criar'> = {
-  transitionHandlers: {
-    INITIAL: ({ client, cleanArg, originalArg }) => {
-      if (!cleanArg) {
-        client.sendMessage(`Qual o nome da tarefa?`);
-        return 'TITLE';
-      }
-      return setTitle(client, cleanArg, originalArg!);
-    },
-    TITLE: ({ client, cleanArg, originalArg }) => setTitle(client, cleanArg, originalArg),
-    DESC: ({ client, cleanArg }) => {
+export const criarCommand: CommandStatesResolver<'criar'> = {
+  INITIAL: ({ client, cleanArg, originalArg }) => {
+    if (!cleanArg) {
+      client.sendMessage(`Qual o nome da tarefa?`);
+      return 'TITLE';
+    }
+    return setTitle(client, cleanArg, originalArg!);
+  },
+  TITLE: {
+    transitionHandle: ({ client, cleanArg, originalArg }) => setTitle(client, cleanArg, originalArg)
+  },
+  DESC: {
+    transitionHandle: ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ICriarContext>();
       context.desc = cleanArg;
       client.sendMessage(`A cada quantos dias?`);
       return 'FREQ';
-    },
-    FREQ: async ({ client, cleanArg }) => {
+    }
+  },
+  FREQ: {
+    transitionHandle: async ({ client, cleanArg }) => {
       const freq = +cleanArg;
       if (isNaN(freq)) {
         client.sendMessage('Preciso de um numero, de quantos em quantos dias a tarefa se repete!');
@@ -79,11 +83,13 @@ export const criarCommand: CommandStateResolver<'criar'> = {
         }
       });
       return 'DOER';
-    },
-    DOER: async ({ client, cleanArg }) => {
+    }
+  },
+  DOER: {
+    transitionHandle: async ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ICriarContext>();
       if (cleanArg != 'enviar') {
-        if (cleanArg ==='pop') {
+        if (cleanArg === 'pop') {
           context.doers.pop();
         }
         else {

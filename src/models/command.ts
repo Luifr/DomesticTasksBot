@@ -19,16 +19,6 @@ export type Command = keyof typeof commandsAndStates;
 
 export type StatesOf<T extends Command> = typeof commandsAndStates[T][number];
 
-type CommandEventCallbacks<T extends Command> = {
-  [state in StatesOf<T>]?: {
-    onLeave?: StateEventFunction;
-    onEnter?: StateEventFunction;
-    onTransition?: {
-      [to in Exclude<StatesOf<T> | 'END', state>]?: StateEventFunction
-    }
-  }
-} & { onEnd?: StateEventFunction };
-
 type StateEventFunction = (client: DomesticTasksClient) => void;
 
 type StateResolverFunctionReturn<T extends Command> =
@@ -55,18 +45,23 @@ export type StateTransitionFunction<T extends Command> = (args: {
   backToLastState: () => StatesOf<T>
 }) => StateResolverFunctionReturn<T>
 
-type CommandTransitionHandlers<T extends Command> = {
-  [state in StatesOf<T>]: StateTransitionFunction<T>
+export type CommandStateResolver<T extends Command, state extends StatesOf<T>> = {
+  transitionHandle: StateTransitionFunction<T>;
+  onLeave?: StateEventFunction;
+  onEnter?: StateEventFunction;
+  onTransition?: {
+    [to in Exclude<StatesOf<T> | 'END', state>]?: StateEventFunction
+  }
+}
+
+export type CommandStatesResolver<T extends Command> = {
+  [state in StatesOf<T>]: CommandStateResolver<T, state>;
 } & {
+  onEnd?: StateEventFunction;
   INITIAL: InitialStateTransitionFunction<T>;
   ANY?: AnyTransitionFunction<T>;
-};
-
-export type CommandStateResolver<T extends Command> = {
-  eventCallbacks?: CommandEventCallbacks<T>;
-  transitionHandlers: CommandTransitionHandlers<T>;
 }
 
 export type CommandExecuter = {
-  [command in Command]: CommandStateResolver<command>
+  [command in Command]: CommandStatesResolver<command>
 }

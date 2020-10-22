@@ -1,5 +1,5 @@
 import { InlineKeyboardButton } from 'node-telegram-bot-api';
-import { CommandStateResolver } from '../../models/command';
+import { CommandStatesResolver } from '../../models/command';
 import { ITask } from '../../models/task';
 import { DomesticTasksClient } from '../../services/client';
 
@@ -56,132 +56,32 @@ const sendTasksKeyboard = (
   );
 };
 
-export const tarefasCommand: CommandStateResolver<'tarefas'> = {
-  eventCallbacks: {
-    onEnd: (client) => {
-      const { context } = client.getCurrentState<ITasksContext>();
-      client.deleteMessage(context.messageId);
-    },
-    MENU: {
-      onEnter: async (client) => {
-        const { context } = client.getCurrentState<ITasksContext>();
-        context.currentTask = undefined as any;
-        const tasks = context.tasks;
-
-        let message = '';
-        const tasksKeyboard: InlineKeyboardButton[][] = [];
-
-        message = `Aqui estão as tarefas cadastradas`;
-
-        tasks.forEach((task) => {
-          tasksKeyboard.push([{
-            text: task.originalName,
-            callback_data: 'open:' + task.originalName
-          }]);
-        });
-
-        if (tasksKeyboard.length === 0) {
-          message = 'Voce não tem tarefas cadastradas, crie uma agora!';
-        }
-
-        tasksKeyboard.push([{ text: 'Criar nova tarefa ➕', callback_data: 'create' }]);
-        tasksKeyboard.push([{ text: 'Fechar menu 🚪', callback_data: TasksCallBack.FECHAR }]);
-        if (!context.messageId) {
-          const messageResponse = await client.sendMessage(
-            message,
-            { reply_markup: { inline_keyboard: tasksKeyboard } }
-          );
-          context.messageId = messageResponse.message_id;
-        }
-        else {
-          client.editMessage(
-            message,
-            { reply_markup: { inline_keyboard: tasksKeyboard }, message_id: context.messageId }
-          );
-        }
-      }
-    },
-    TASK: {
-      onEnter: async (client) => {
-        const { context } = client.getCurrentState<ITasksContext>();
-        const currentTask = context.currentTask;
-        const message = `Tarefa: ${currentTask.originalName}`;
-
-        const tasksKeyboard: InlineKeyboardButton[][] = [];
-
-        // TODO: add butttons that can show and edit task info
-        tasksKeyboard.push([{ text: `Fazedores`, callback_data: 'show:doers' }]);
-        tasksKeyboard.push([{ text: 'Deletar ❌', callback_data: 'delete' }]);
-
-        sendTasksKeyboard(client, message, tasksKeyboard);
-      }
-    },
-    DOERS: {
-      onEnter: async (client) => {
-        const { context } = client.getCurrentState<ITasksContext>();
-        const doers = await client.db.info.getTaskDoers(context.currentTask);
-        context.editDoersIndexes = doers.map(doer => doer?.userId || -1);
-        const tasksKeyboard: InlineKeyboardButton[][] = [];
-
-        doers.forEach((doer, index) => {
-          let name = 'Dia livre';
-          if (doer) {
-            name = doer.name;
-          }
-          tasksKeyboard.push([{
-            text: name + (context.currentTask.nextDoer === index ? ' 🚩' : ''),
-            callback_data: String(index)
-          }]);
-        });
-
-
-        tasksKeyboard.push([{ text: '=========', callback_data: 'noop' }]);
-        tasksKeyboard.push([{ text: 'Editar pessoas 🖊️', callback_data: 'edit' }]);
-
-        const message = `A lista da pessoas para a tarefa ${context.currentTask.originalName}\n` +
-          'Clique em alguem para que ela seja a proxima pessoa\n' +
-          'A proxima pessoa esta marcada com a bandeira';
-
-        sendTasksKeyboard(client, message, tasksKeyboard);
-      }
-    },
-    EDIT_DOERS: {
-      onEnter: async (client) => {
-        const { context } = client.getCurrentState<ITasksContext>();
-        const responseText = 'Selecione os responsaveis\n' +
-          'Quando acabar é só salvar';
-        client.editMessage(
-          responseText,
-          {
-            reply_markup: {
-              inline_keyboard: await getDoersKeyboard(client, context.editDoersIndexes)
-            }
-          }
-        );
-      }
-    }
+export const tarefasCommand: CommandStatesResolver<'tarefas'> = {
+  onEnd: (client) => {
+    const { context } = client.getCurrentState<ITasksContext>();
+    client.deleteMessage(context.messageId);
   },
-  transitionHandlers: {
-    ANY: ({ cleanArg, backToLastState }) => {
-      if (cleanArg === TasksCallBack.FECHAR) {
-        return 'END';
-      }
-      else if (cleanArg === TasksCallBack.VOLTAR) {
-        return backToLastState();
-      }
-      return;
-    },
-    INITIAL: async ({ client }) => {
+  ANY: ({ cleanArg, backToLastState }) => {
+    if (cleanArg === TasksCallBack.FECHAR) {
+      return 'END';
+    }
+    else if (cleanArg === TasksCallBack.VOLTAR) {
+      return backToLastState();
+    }
+    return;
+  },
+  INITIAL: async ({ client }) => {
 
-      const tasks = await client.db.info.task.getAll();
+    const tasks = await client.db.info.task.getAll();
 
-      const { context } = client.getCurrentState<ITasksContext>();
-      context.tasks = tasks;
-      context.currentTask = undefined as any;
+    const { context } = client.getCurrentState<ITasksContext>();
+    context.tasks = tasks;
+    context.currentTask = undefined as any;
 
-      return 'MENU' as const;
-    },
-    MENU: async ({ client, cleanArg }) => {
+    return 'MENU' as const;
+  },
+  MENU: {
+    transitionHandle: async ({ client, cleanArg }) => {
       // ${...tasks}
       // criar
       // fechar
@@ -202,7 +102,46 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       return 'TASK';
 
     },
-    TASK: async ({ client, cleanArg }) => {
+    onEnter: async (client) => {
+      const { context } = client.getCurrentState<ITasksContext>();
+      context.currentTask = undefined as any;
+      const tasks = context.tasks;
+
+      let message = '';
+      const tasksKeyboard: InlineKeyboardButton[][] = [];
+
+      message = `Aqui estão as tarefas cadastradas`;
+
+      tasks.forEach((task) => {
+        tasksKeyboard.push([{
+          text: task.originalName,
+          callback_data: 'open:' + task.originalName
+        }]);
+      });
+
+      if (tasksKeyboard.length === 0) {
+        message = 'Voce não tem tarefas cadastradas, crie uma agora!';
+      }
+
+      tasksKeyboard.push([{ text: 'Criar nova tarefa ➕', callback_data: 'create' }]);
+      tasksKeyboard.push([{ text: 'Fechar menu 🚪', callback_data: TasksCallBack.FECHAR }]);
+      if (!context.messageId) {
+        const messageResponse = await client.sendMessage(
+          message,
+          { reply_markup: { inline_keyboard: tasksKeyboard } }
+        );
+        context.messageId = messageResponse.message_id;
+      }
+      else {
+        client.editMessage(
+          message,
+          { reply_markup: { inline_keyboard: tasksKeyboard }, message_id: context.messageId }
+        );
+      }
+    }
+  },
+  TASK: {
+    transitionHandle: async ({ client, cleanArg }) => {
       if (cleanArg === 'delete') {
         // TODO: create
         client.sendMessage('Função delete nao implementada 😅');
@@ -224,7 +163,22 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
       }
 
     },
-    DOERS: async ({ client, cleanArg }) => {
+    onEnter: async (client) => {
+      const { context } = client.getCurrentState<ITasksContext>();
+      const currentTask = context.currentTask;
+      const message = `Tarefa: ${currentTask.originalName}`;
+
+      const tasksKeyboard: InlineKeyboardButton[][] = [];
+
+      // TODO: add butttons that can show and edit task info
+      tasksKeyboard.push([{ text: `Fazedores`, callback_data: 'show:doers' }]);
+      tasksKeyboard.push([{ text: 'Deletar ❌', callback_data: 'delete' }]);
+
+      sendTasksKeyboard(client, message, tasksKeyboard);
+    }
+  },
+  DOERS: {
+    transitionHandle: async ({ client, cleanArg }) => {
       const { context } = client.getCurrentState<ITasksContext>();
 
       if (cleanArg === 'noop') {
@@ -250,7 +204,36 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
 
       return 'DOERS';
     },
-    EDIT_DOERS: async ({ client, cleanArg, isCallbackData, backToLastState }) => {
+    onEnter: async (client) => {
+      const { context } = client.getCurrentState<ITasksContext>();
+      const doers = await client.db.info.getTaskDoers(context.currentTask);
+      context.editDoersIndexes = doers.map(doer => doer?.userId || -1);
+      const tasksKeyboard: InlineKeyboardButton[][] = [];
+
+      doers.forEach((doer, index) => {
+        let name = 'Dia livre';
+        if (doer) {
+          name = doer.name;
+        }
+        tasksKeyboard.push([{
+          text: name + (context.currentTask.nextDoer === index ? ' 🚩' : ''),
+          callback_data: String(index)
+        }]);
+      });
+
+
+      tasksKeyboard.push([{ text: '=========', callback_data: 'noop' }]);
+      tasksKeyboard.push([{ text: 'Editar pessoas 🖊️', callback_data: 'edit' }]);
+
+      const message = `A lista da pessoas para a tarefa ${context.currentTask.originalName}\n` +
+        'Clique em alguem para que ela seja a proxima pessoa\n' +
+        'A proxima pessoa esta marcada com a bandeira';
+
+      sendTasksKeyboard(client, message, tasksKeyboard);
+    }
+  },
+  EDIT_DOERS: {
+    transitionHandle: async ({ client, cleanArg, isCallbackData, backToLastState }) => {
 
       if (!isCallbackData) {
         client.sendMessage('Escolha uma das opções do teclado', undefined, { selfDestruct: 1200 });
@@ -284,6 +267,19 @@ export const tarefasCommand: CommandStateResolver<'tarefas'> = {
         context.editDoersIndexes.push(+cleanArg);
       }
       return 'EDIT_DOERS' as const;
+    },
+    onEnter: async (client) => {
+      const { context } = client.getCurrentState<ITasksContext>();
+      const responseText = 'Selecione os responsaveis\n' +
+        'Quando acabar é só salvar';
+      client.editMessage(
+        responseText,
+        {
+          reply_markup: {
+            inline_keyboard: await getDoersKeyboard(client, context.editDoersIndexes)
+          }
+        }
+      );
     }
   }
 };

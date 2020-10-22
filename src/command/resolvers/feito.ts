@@ -1,5 +1,5 @@
 import { parseDate } from '../../helpers/date';
-import { CommandStateResolver } from '../../models/command';
+import { CommandStatesResolver } from '../../models/command';
 import { IDoer } from '../../models/doer';
 import { DomesticTasksClient } from '../../services/client';
 
@@ -48,17 +48,17 @@ const doTask = async (client: DomesticTasksClient, taskName: string) => {
   client.sendMessage(replyMessage, { parse_mode: 'Markdown' });
 };
 
-export const feitoCommand: CommandStateResolver<'feito'> = {
-  transitionHandlers: {
-    INITIAL: async ({ client, cleanArg }) => {
-      if (!cleanArg) {
-        client.sendMessage('Me mande o nome da tarefa');
-        return 'NAME';
-      }
-      doTask(client, cleanArg);
-      return 'END';
-    },
-    NAME: ({ client, cleanArg }) => {
+export const feitoCommand: CommandStatesResolver<'feito'> = {
+  INITIAL: async ({ client, cleanArg }) => {
+    if (!cleanArg) {
+      client.sendMessage('Me mande o nome da tarefa');
+      return 'NAME';
+    }
+    doTask(client, cleanArg);
+    return 'END';
+  },
+  NAME: {
+    transitionHandle: ({ client, cleanArg }) => {
       doTask(client, cleanArg);
       return 'END';
     }
